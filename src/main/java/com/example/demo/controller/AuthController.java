@@ -68,10 +68,21 @@ public class AuthController {
                 return ResponseEntity.badRequest().body("Email not provided by Google OAuth");
             }
 
-            Optional<User> userOpt = userRepository.findByEmail(email);
-            User user;
-            if (userOpt.isPresent()) {
-                user = userOpt.get();
+            List<User> users = userRepository.findByEmail(email);
+            User user = null;
+            if (!users.isEmpty()) {
+                // If there are multiple accounts, try to match the requested role context
+                String targetRole = request.getRole() != null ? request.getRole() : "STUDENT";
+                for (User u : users) {
+                    if (u.getRole().equalsIgnoreCase(targetRole)) {
+                        user = u;
+                        break;
+                    }
+                }
+                // Fallback to the first found user if no role matched
+                if (user == null) {
+                    user = users.get(0);
+                }
             } else {
                 // Register a new user
                 user = new User();
