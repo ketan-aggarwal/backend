@@ -79,8 +79,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         Number senderIdNum = (Number) map.get("senderId");
         Number recipientIdNum = (Number) map.get("recipientId");
 
-        if (content == null || senderIdNum == null || recipientIdNum == null) {
-            System.err.println("Invalid payload: content, senderId, and recipientId are required");
+        if (content == null || content.trim().isEmpty() || senderIdNum == null || recipientIdNum == null) {
+            System.err.println("Invalid payload: content cannot be empty, senderId and recipientId are required");
+            return;
+        }
+
+        if (content.length() > 2000) {
+            System.err.println("Message exceeds max length (2000 characters)");
             return;
         }
 

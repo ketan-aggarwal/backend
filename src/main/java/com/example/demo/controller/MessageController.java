@@ -33,6 +33,9 @@ public class MessageController {
 
     @PostMapping("/doubt/{doubtId}")
     public ResponseEntity<?> addDoubtReply(@PathVariable Long doubtId, @RequestBody Message message) {
+        if (message.getContent() == null || message.getContent().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Reply content cannot be empty!");
+        }
         Optional<Doubt> doubtOpt = doubtRepository.findById(doubtId);
         if (doubtOpt.isEmpty()) {
             return ResponseEntity.notFound().build();

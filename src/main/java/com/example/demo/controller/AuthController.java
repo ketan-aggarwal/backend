@@ -29,6 +29,21 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
+        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username cannot be empty!");
+        }
+        if (user.getUsername().trim().length() < 3 || user.getUsername().trim().length() > 20) {
+            return ResponseEntity.badRequest().body("Username must be between 3 and 20 characters!");
+        }
+        if (user.getPassword() == null || user.getPassword().trim().length() < 6) {
+            return ResponseEntity.badRequest().body("Password must be at least 6 characters!");
+        }
+        if (user.getEmail() != null && !user.getEmail().trim().isEmpty() && !user.getEmail().contains("@")) {
+            return ResponseEntity.badRequest().body("Please provide a valid email address!");
+        }
+        if (user.getRole() == null || (!user.getRole().equals("STUDENT") && !user.getRole().equals("MENTOR"))) {
+            return ResponseEntity.badRequest().body("Invalid role! Role must be STUDENT or MENTOR.");
+        }
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username is already taken!");
         }

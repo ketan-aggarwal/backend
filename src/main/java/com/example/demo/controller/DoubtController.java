@@ -37,6 +37,18 @@ public class DoubtController {
 
     @PostMapping
     public ResponseEntity<?> createDoubt(@RequestBody Doubt doubt) {
+        if (doubt.getTitle() == null || doubt.getTitle().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Doubt title cannot be empty!");
+        }
+        if (doubt.getTitle().trim().length() < 5 || doubt.getTitle().trim().length() > 100) {
+            return ResponseEntity.badRequest().body("Title must be between 5 and 100 characters!");
+        }
+        if (doubt.getDescription() == null || doubt.getDescription().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Doubt description cannot be empty!");
+        }
+        if (doubt.getCategory() == null || doubt.getCategory().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Category is required!");
+        }
         if (doubt.getStudent() == null || doubt.getStudent().getId() == null) {
             return ResponseEntity.badRequest().body("Student reference with ID is required");
         }
