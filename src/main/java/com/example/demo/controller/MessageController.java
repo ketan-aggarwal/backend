@@ -6,6 +6,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.DoubtRepository;
 import com.example.demo.repository.MessageRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.ProfanityFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,9 @@ public class MessageController {
     @Autowired
     private DoubtRepository doubtRepository;
 
+    @Autowired
+    private ProfanityFilter profanityFilter;
+
     @GetMapping("/doubt/{doubtId}")
     public List<Message> getDoubtReplies(@PathVariable Long doubtId) {
         return messageRepository.findByDoubtIdOrderByCreatedAtAsc(doubtId);
@@ -35,6 +39,9 @@ public class MessageController {
     public ResponseEntity<?> addDoubtReply(@PathVariable Long doubtId, @RequestBody Message message) {
         if (message.getContent() == null || message.getContent().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Reply content cannot be empty!");
+        }
+        if (profanityFilter.containsProfanity(message.getContent())) {
+            return ResponseEntity.badRequest().body("Inappropriate language detected. Please review your text.");
         }
         Optional<Doubt> doubtOpt = doubtRepository.findById(doubtId);
         if (doubtOpt.isEmpty()) {
@@ -77,6 +84,9 @@ public class MessageController {
         message.setRecipient(recipientOpt.get());
         message.setIsPrivate(true);
         message.setDoubt(null);
+        if (message.getContent() != null) {
+            message.setContent(profanityFilter.censorText(message.getContent()));
+        }
         Message saved = messageRepository.save(message);
         return ResponseEntity.ok(saved);
     }

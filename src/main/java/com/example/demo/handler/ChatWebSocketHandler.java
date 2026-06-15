@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import com.example.demo.security.JwtUtil;
+import com.example.demo.security.ProfanityFilter;
 
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
@@ -35,6 +36,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private ProfanityFilter profanityFilter;
 
     public ChatWebSocketHandler() {
         this.objectMapper = new ObjectMapper();
@@ -106,7 +110,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         // Create and save the message entity to the database
         Message chatMessage = new Message();
-        chatMessage.setContent(content);
+        chatMessage.setContent(profanityFilter.censorText(content));
         chatMessage.setSender(senderOpt.get());
         chatMessage.setRecipient(recipientOpt.get());
         chatMessage.setIsPrivate(true);

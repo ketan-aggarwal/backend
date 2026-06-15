@@ -4,6 +4,7 @@ import com.example.demo.model.Doubt;
 import com.example.demo.model.User;
 import com.example.demo.repository.DoubtRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.ProfanityFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,9 @@ public class DoubtController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProfanityFilter profanityFilter;
 
     @GetMapping
     public List<Doubt> getDoubts(@RequestParam(required = false) String category,
@@ -45,6 +49,9 @@ public class DoubtController {
         }
         if (doubt.getDescription() == null || doubt.getDescription().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Doubt description cannot be empty!");
+        }
+        if (profanityFilter.containsProfanity(doubt.getTitle()) || profanityFilter.containsProfanity(doubt.getDescription())) {
+            return ResponseEntity.badRequest().body("Inappropriate language detected. Please review your text.");
         }
         if (doubt.getCategory() == null || doubt.getCategory().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Category is required!");
