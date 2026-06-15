@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.GoogleAuthRequest;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.JwtUtil;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -23,6 +24,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Value("${google.client.id}")
     private String googleClientId;
@@ -48,7 +52,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Username is already taken!");
         }
         User savedUser = userRepository.save(user);
-        return ResponseEntity.ok(savedUser);
+        String token = jwtUtil.generateToken(savedUser);
+        return ResponseEntity.ok(new AuthResponse(savedUser, token));
     }
 
     @PostMapping("/login")
@@ -57,7 +62,9 @@ public class AuthController {
         if (userOpt.isEmpty() || !userOpt.get().getPassword().equals(loginRequest.getPassword())) {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
-        return ResponseEntity.ok(userOpt.get());
+        User user = userOpt.get();
+        String token = jwtUtil.generateToken(user);
+        return ResponseEntity.ok(new AuthResponse(user, token));
     }
 
     @PostMapping("/google")
@@ -123,9 +130,25 @@ public class AuthController {
                 user = userRepository.save(user);
             }
 
-            return ResponseEntity.ok(user);
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(new AuthResponse(user, token));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Google Auth error: " + e.getMessage());
         }
+    }
+
+    public static class AuthResponse {
+        private User user;
+        private String token;
+
+        public AuthResponse(User user, String token) {
+            this.user = user;
+            this.token = token;
+        }
+
+        public User getUser() { return user; }
+        public void setUser(User user) { this.user = user; }
+        public String getToken() { return token; }
+        public void setToken(String token) { this.token = token; }
     }
 }

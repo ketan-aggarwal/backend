@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import com.example.demo.security.JwtUtil;
 
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
@@ -32,6 +33,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     public ChatWebSocketHandler() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule()); // Enables Java 8 Date/Time serialization (LocalDateTime)
@@ -44,12 +48,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         String query = uri.getQuery();
         Long userId = null;
-        if (query != null && query.contains("userId=")) {
+        if (query != null && query.contains("token=")) {
             try {
-                String userIdStr = query.split("userId=")[1].split("&")[0];
-                userId = Long.parseLong(userIdStr);
+                String token = query.split("token=")[1].split("&")[0];
+                userId = jwtUtil.verifyToken(token);
             } catch (Exception e) {
-                System.err.println("Failed to parse userId from query params: " + e.getMessage());
+                System.err.println("Failed to verify token from WebSocket query params: " + e.getMessage());
             }
         }
 
